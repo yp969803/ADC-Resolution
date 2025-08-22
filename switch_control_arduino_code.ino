@@ -1,14 +1,13 @@
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(9600);
-  
+
   // Data pins
- for (int i = 2; i <= 8; i++) {
+  for (int i = 2; i <= 8; i++) {
     pinMode(i, INPUT);
   }
+
   // ADC D0 → Arduino D9
   pinMode(9, INPUT);
-
 
   // EOC pin
   pinMode(11, INPUT);
@@ -16,10 +15,11 @@ void setup() {
   // SOC pin
   pinMode(12, OUTPUT);
 
+
   // DAC Switch control
   pinMode(13, OUTPUT);
 
-
+  calculate();
 }
 
 uint8_t readADC() {
@@ -36,96 +36,51 @@ uint8_t readADC() {
   return value;
 }
 
-
 void calculate() {
-
-   Serial.println("Start of the calculation");
-   // Open dac circuit
-
-   digitalWrite(13, LOW);
-
-   Serial.print("Pin 13 status:");
-   Serial.println(digitalRead(13));
-
-  // Trigger SOC
-  digitalWrite(12, HIGH); // send SOC high
-
-  Serial.print("Pin 12 status:");
-  Serial.println(digitalRead(12));
-
-  Serial.print("Pin 11 status:");
-  Serial.println(digitalRead(11));
-
-  delayMicroseconds(10); // small delay
-  digitalWrite(12, LOW); // bring soc low
-
-  Serial.print("Pin 12 status:");
-  Serial.println(digitalRead(12));
-  // wait until EOC (pin 11) goes HIGH
-  while(digitalRead(11)==LOW){
-     Serial.println("Inside while loop for checking eoc");
-  }
-
-  Serial.print("Pin 11 status:");
-  Serial.println(digitalRead(11));
-  // Get inital voltage
-  uint8_t adc_data_initial = readADC();
-
-    // Print the value in binary (to see pin states clearly)
-  Serial.print("Inital voltage Binary: ");
-  Serial.println(adc_data_initial, BIN);
-
-
-  Serial.print("Pin 13 status:");
-  Serial.println(digitalRead(13));
-
-  // Close dac circuit
-  digitalWrite(13, HIGH);
-
-  Serial.println("After close of the circuit");
-
-  Serial.print("Pin 13 status:");
-  Serial.println(digitalRead(13));
-
-   Serial.print("Pin 12 status:");
-  Serial.println(digitalRead(12));
-  // Trigger SOC
-  digitalWrite(12, HIGH); // send SOC high
-
-  Serial.print("Pin 12 status:");
-  Serial.println(digitalRead(12));
-  
-  delayMicroseconds(10); // small delay
-  digitalWrite(12, LOW); // bring soc low
-
-  Serial.print("Pin 12 status:");
-  Serial.println(digitalRead(12));
-
-  Serial.print("Pin 11 status:");
-  Serial.println(digitalRead(11));
-
-  // wait until EOC (pin 11) goes HIGH
-  while(digitalRead(11)==LOW){
-     Serial.println("inside while loop after close of circuit");
-  }
-
-  // Get voltage after converting from dac
-  uint8_t adc_data_after = readADC();
-
-  // Print the value in binary (to see pin states clearly)
-  Serial.print("Voltage after dac and comparator Binary: ");
-  Serial.println(adc_data_after, BIN);
-
-    // Open dac circuit
   digitalWrite(13, LOW);
 
-  Serial.print("Pin 13 status:");
-  Serial.println(digitalRead(13));
 
-  delay(5000);
+  // Trigger SOC
+  digitalWrite(12, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(12, LOW);
 
+
+  // Wait until EOC goes HIGH
+  Serial.println("i");
+  while (digitalRead(11) == LOW) {
+  }
+
+
+  // Get initial reading
+  uint8_t adc_data_initial = readADC();
+  Serial.println((double)adc_data_initial, 4);
+
+  // Close DAC circuit
+  digitalWrite(13, HIGH);
+  while (digitalRead(13) == LOW) {
+  }
+
+  // Trigger SOC
+  digitalWrite(12, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(12, LOW);
+
+  Serial.println("i");
+  while (digitalRead(11) == LOW) {
+  }
+
+  // Get DAC-converted reading
+  uint8_t adc_data_after = readADC();
+  Serial.println((double)adc_data_after, 4);
+
+
+  // Final calculation (explicit casting to double)
+  double ans = (((double)adc_data_initial * 248.0) + (double)adc_data_after) * 5.0 / (248.0 * 256.0);
+
+  Serial.println("F");
+  Serial.println(ans, 4);
 }
 
 void loop() {
-    calculate();
 }
